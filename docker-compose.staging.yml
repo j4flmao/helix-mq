@@ -1,0 +1,12 @@
+# Staging: production-like durability (fsync every acknowledgement) and
+# process policy, with a smaller footprint than production.
+services:
+  helixd:
+    restart: unless-stopped
+    environment:
+      HELIX_SYNC: always
+      HELIX_LOG_LEVEL: info
+    healthcheck:
+      interval: 5s
+      retries: 3
+    stop_grace_period: 25s

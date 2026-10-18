@@ -1,0 +1,127 @@
+# A real three-node replicated cluster.
+#
+#   scripts/compose.sh cluster up -d --build
+#   scripts/compose.sh cluster demo          run the cluster walkthrough again
+#
+# The cluster file addresses nodes by IPv4 literal, so every node gets a static
+# address on an internal subnet (10.77.0.1x); that address is also how health
+# checks and clients reach it. Node identity (--node-id) comes from the command
+# line and overrides the shared configuration file, exactly like a deployment
+# wrapper would layer it.
+services:
+  helixd-0:
+    build:
+      context: .
+    image: helix-mq:${HELIX_TAG:-local}
+    command: ["--config", "/etc/helix/cluster/helixd.conf", "--node-id", "0"]
+    environment:
+      HELIX_DATA_DIR: /var/lib/helix/data
+      HELIX_SYNC: ${HELIX_SYNC:-interval}
+      HELIX_LOG_LEVEL: ${HELIX_LOG_LEVEL:-info}
+    ports:
+      - "127.0.0.1:${HELIX_NODE0_PORT:-9400}:9400"
+    volumes:
+      - node0-data:/var/lib/helix/data
+      - ./deploy/config:/etc/helix:ro
+    networks:
+      helix-net:
+        ipv4_address: 10.77.0.10
+    healthcheck:
+      test: ["CMD", "helixctl", "-H", "10.77.0.10", "-P", "9400", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  helixd-1:
+    image: helix-mq:${HELIX_TAG:-local}
+    command: ["--config", "/etc/helix/cluster/helixd.conf", "--node-id", "1"]
+    environment:
+      HELIX_DATA_DIR: /var/lib/helix/data
+      HELIX_SYNC: ${HELIX_SYNC:-interval}
+      HELIX_LOG_LEVEL: ${HELIX_LOG_LEVEL:-info}
+    ports:
+      - "127.0.0.1:${HELIX_NODE1_PORT:-9410}:9410"
+    volumes:
+      - node1-data:/var/lib/helix/data
+      - ./deploy/config:/etc/helix:ro
+    networks:
+      helix-net:
+        ipv4_address: 10.77.0.11
+    healthcheck:
+      test: ["CMD", "helixctl", "-H", "10.77.0.11", "-P", "9410", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  helixd-2:
+    image: helix-mq:${HELIX_TAG:-local}
+    command: ["--config", "/etc/helix/cluster/helixd.conf", "--node-id", "2"]
+    environment:
+      HELIX_DATA_DIR: /var/lib/helix/data
+      HELIX_SYNC: ${HELIX_SYNC:-interval}
+      HELIX_LOG_LEVEL: ${HELIX_LOG_LEVEL:-info}
+    ports:
+      - "127.0.0.1:${HELIX_NODE2_PORT:-9420}:9420"
+    volumes:
+      - node2-data:/var/lib/helix/data
+      - ./deploy/config:/etc/helix:ro
+    networks:
+      helix-net:
+        ipv4_address: 10.77.0.12
+    healthcheck:
+      test: ["CMD", "helixctl", "-H", "10.77.0.12", "-P", "9420", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  demo:
+    image: helix-mq:${HELIX_TAG:-local}
+    entrypoint: ["bash", "/opt/helix/examples/demo/cluster.sh"]
+    environment:
+      HELIX_NODES: "10.77.0.10:9400,10.77.0.11:9410,10.77.0.12:9420"
+      CLUSTER_TOPIC: ${CLUSTER_TOPIC:-events}
+    depends_on:
+      helixd-0:
+        condition: service_healthy
+      helixd-1:
+        condition: service_healthy
+      helixd-2:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - helix-net
+
+networks:
+  helix-net:
+    ipam:
+      config:
+        - subnet: 10.77.0.0/24
+
+volumes:
+  node0-data:
+  node1-data:
+  node2-data:

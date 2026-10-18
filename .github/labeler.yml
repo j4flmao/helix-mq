@@ -1,0 +1,18 @@
+area/replication:
+  - changed-files:
+      - any-glob-to-any-file: ['src/repl/**', 'src/raft/**', 'src/ctrl/**', 'src/broker/cluster.*']
+area/storage:
+  - changed-files:
+      - any-glob-to-any-file: ['src/storage/**']
+area/protocol:
+  - changed-files:
+      - any-glob-to-any-file: ['src/proto/**', 'src/net/**', 'tools/**']
+area/ci:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**', 'Dockerfile', 'Makefile', 'docker-compose.yml']
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.md', 'examples/**']
+tests:
+  - changed-files:
+      - any-glob-to-any-file: ['tests/**', 'scripts/**']

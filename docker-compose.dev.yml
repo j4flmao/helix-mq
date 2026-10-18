@@ -1,0 +1,48 @@
+# Development: an interactive broker plus the example walkthrough, which runs
+# once the daemon is healthy and exits 0 when every check passed.
+#
+#   scripts/compose.sh dev up -d --build   broker + walkthrough
+#   scripts/compose.sh dev test            unit + config tests in a container
+#   scripts/compose.sh dev shell           toolchain shell with the repo mounted
+services:
+  helixd:
+    environment:
+      HELIX_SYNC: interval
+      HELIX_LOG_LEVEL: debug
+    healthcheck:
+      interval: 5s
+      start_period: 3s
+
+  demo:
+    image: helix-mq:${HELIX_TAG:-local}
+    entrypoint: ["bash", "/opt/helix/examples/demo/run.sh"]
+    environment:
+      HELIX_HOST: helixd
+      HELIX_PORT: "9400"
+    depends_on:
+      helixd:
+        condition: service_healthy
+    restart: "no"
+
+  tests:
+    build:
+      context: .
+      target: dev
+    profiles: ["tests"]
+    working_dir: /src
+    volumes:
+      - .:/src
+    command:
+      ["bash", "-c", "make all test && HELIX_BIN_DIR=build bash scripts/config_test.sh"]
+
+  shell:
+    build:
+      context: .
+      target: dev
+    profiles: ["tests"]
+    working_dir: /src
+    volumes:
+      - .:/src
+    entrypoint: ["bash"]
+    stdin_open: true
+    tty: true

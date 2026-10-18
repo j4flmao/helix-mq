@@ -1,0 +1,22 @@
+# Production: durability first, resources bounded, a read-only root filesystem.
+# The broker only ever writes into its data volume.
+services:
+  helixd:
+    restart: always
+    environment:
+      HELIX_SYNC: always
+      HELIX_LOG_LEVEL: warn
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    pids_limit: 4096
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 10s
+    stop_grace_period: 30s

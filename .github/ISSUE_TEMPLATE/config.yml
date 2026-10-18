@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security reporting policy
+    url: https://github.com/j4flmao/helix-mq/blob/main/SECURITY.md
+    about: Read this before reporting a vulnerability.

@@ -1,0 +1,41 @@
+name: Scheduled stress
+on:
+  schedule:
+    - cron: '17 20 * * 0'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: scheduled-stress
+  cancel-in-progress: false
+jobs:
+  stress:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y clang libclang-rt-18-dev
+          chmod +x scripts/*.sh
+      - name: Random fault injection and longer fuzzing
+        run: |
+          mkdir -p artifacts
+          set -o pipefail
+          (make test raft-stress repl-stress chost-stress && make fuzz FUZZ_TIME=120) 2>&1 | tee artifacts/stress.log
+        env:
+          HX_RAFT_SEEDS: '3000'
+          HX_REPL_SEEDS: '3000'
+          HX_CHOST_SEEDS: '1500'
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stress-diagnostics
+          path: |
+            artifacts/
+            crash-*
+            timeout-*
+            leak-*
+          retention-days: 14

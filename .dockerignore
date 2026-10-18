@@ -1,0 +1,9 @@
+build
+data
+*.tar.gz
+.git
+docker-*.log
+dist
+artifacts
+node_modules
+.husky

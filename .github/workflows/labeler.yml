@@ -1,0 +1,39 @@
+name: PR labels
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+jobs:
+  labels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      # Metadata only: never checkout or execute code from a pull request here.
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const labels = {
+              'area/replication': '5319e7', 'area/storage': '0052cc',
+              'area/protocol': '006b75', 'area/ci': 'bfd4f2',
+              'documentation': '0075ca', 'tests': 'c2e0c6',
+              'bug': 'd73a4a', 'enhancement': 'a2eeef',
+              'dependencies': '0366d6', 'breaking-change': 'b60205'
+            };
+            for (const [name, color] of Object.entries(labels)) {
+              try {
+                await github.rest.issues.getLabel({...context.repo, name});
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                try {
+                  await github.rest.issues.createLabel({...context.repo, name, color});
+                } catch (createError) {
+                  if (createError.status !== 422) throw createError;
+                }
+              }
+            }
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
+        with:
+          sync-labels: false

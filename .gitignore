@@ -1,0 +1,12 @@
+build/
+data/
+*.o
+*.d
+*.tar.gz
+compile_commands.json
+.cache/
+dist/
+artifacts/
+docker-*.log
+*.log
+node_modules/

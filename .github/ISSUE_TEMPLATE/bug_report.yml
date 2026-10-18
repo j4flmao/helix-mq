@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible correctness or reliability problem.
+title: '[Bug]: '
+body:
+  - type: markdown
+    attributes:
+      value: 'For security vulnerabilities, use SECURITY.md rather than a public issue.'
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Include helixd --version and whether this is a release, source or Docker build.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Linux distribution, CPU architecture, filesystem, sync policy, node/partition counts.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Minimal commands, config and simulator seed if relevant. Remove secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or sanitizer output
+      render: text

@@ -1,0 +1,7 @@
+# Conventional Commits gate. Falls back to a hint when dependencies are absent.
+msgfile=$1
+if [ -x node_modules/.bin/commitlint ]; then
+    node_modules/.bin/commitlint --edit "$msgfile"
+else
+    echo "commit-msg: commitlint is not installed; run 'npm install' to enable message checks" >&2
+fi

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Helix MQ - standalone broker, XML format. The same broker as standalone.conf.
+
+    HELIX_DEMO_WORK=/srv/helix helixd --config standalone.xml
+
+  The parser reads a documented subset of XML 1.0:
+    * <helix> is the root; a group element (server, broker, storage, limits,
+      log, ...) only carries children and attributes, never text of its own;
+    * an attribute on a group and the text of any other element are settings;
+    * comments and the <?xml?> prolog are ignored, <![CDATA[ ... ]]> is literal,
+      and &amp;/&lt;/&gt;/&quot;/&apos;/&#NN;/&#xNN; are decoded;
+    * <include file="..."/> merges another file, applied where it stands;
+    * ${NAME} is substituted from the environment after entity decoding.
+
+  A typo fails at startup with "file:line: unknown option 'x'" instead of being
+  silently ignored, which is the point of the strict subset.
+-->
+<helix>
+  <include file="standalone-network.xml"/>
+
+  <broker>
+    <data-dir>${HELIX_DEMO_WORK}/standalone-data</data-dir>
+    <max-fetch-bytes>262144</max-fetch-bytes>
+    <!-- Limits live together where they are easy to review. -->
+    <limits max-record-bytes="65536"/>
+  </broker>
+
+  <storage segment-bytes="1048576" sync="interval" sync-interval-ms="25"/>
+
+  <!-- Socket tuning: a group's attributes are settings like any other. -->
+  <network listen-backlog="256" tcp-nodelay="1" recv-buffer-bytes="262144"
+           send-buffer-bytes="262144" max-out-pending="262144"/>
+
+  <log-level>warn</log-level>
+</helix>

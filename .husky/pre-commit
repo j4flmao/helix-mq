@@ -1,0 +1,11 @@
+# Keep staged C sources clang-formatted. Skipped when clang-format is missing
+# or when no C file is staged, so the hook never blocks unrelated commits.
+files=$(git diff --cached --name-only --diff-filter=ACM -- '*.c' '*.h')
+[ -n "$files" ] || exit 0
+command -v clang-format >/dev/null 2>&1 || exit 0
+for f in $files; do
+    if ! clang-format --dry-run -Werror "$f" >/dev/null 2>&1; then
+        echo "pre-commit: $f is not clang-formatted (run: clang-format -i $f)" >&2
+        exit 1
+    fi
+done

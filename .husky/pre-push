@@ -1,0 +1,5 @@
+# Unit-test gate before pushing. Helix is Linux-only, so the check runs where
+# the toolchain lives and is skipped on hosts without make (e.g. Windows).
+if command -v make >/dev/null 2>&1 && [ "$(uname -s)" = "Linux" ]; then
+    make --no-print-directory test
+fi

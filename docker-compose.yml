@@ -1,0 +1,41 @@
+# Base deployment: one standalone broker.
+#
+#   docker compose up -d                       development defaults (dev config)
+#   scripts/compose.sh <dev|staging|prod> up   environment-aware (recommended)
+#   scripts/compose.sh cluster up              three-node replicated cluster
+#
+# Settings come from /etc/helix/<env>/helixd.conf (mounted read-only from
+# deploy/config/); the environment files (.env.dev, ...) select the file and
+# tune it through ${NAME} substitution inside the configuration.
+services:
+  helixd:
+    build:
+      context: .
+    image: helix-mq:${HELIX_TAG:-local}
+    command: ["--config", "/etc/helix/${HELIX_ENV:-dev}/helixd.conf"]
+    environment:
+      HELIX_DATA_DIR: /var/lib/helix/data
+      HELIX_SYNC: ${HELIX_SYNC:-interval}
+      HELIX_LOG_LEVEL: ${HELIX_LOG_LEVEL:-info}
+    ports:
+      - "127.0.0.1:${HELIX_PORT:-9400}:9400"
+    volumes:
+      - helix-data:/var/lib/helix/data
+      - ./deploy/config:/etc/helix:ro
+    stop_grace_period: 15s
+    healthcheck:
+      test: ["CMD", "helixctl", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  helix-data:

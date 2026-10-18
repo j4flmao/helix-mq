@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Included by standalone.xml. A path is relative to the file that names it, so
+  this fragment sits next to the file that includes it. Settings from an
+  included file are applied where the <include> element stands.
+-->
+<helix>
+  <!-- "server" is a group: its attributes are settings, and it holds no text. -->
+  <server listen="127.0.0.1" port="0" max-conns="64"/>
+  <port-file>${HELIX_DEMO_WORK}/standalone.port</port-file>
+</helix>

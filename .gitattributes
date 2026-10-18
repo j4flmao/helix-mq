@@ -1,0 +1,21 @@
+# The project is Linux-only: keep text files LF so shell scripts, Makefiles and
+# configuration files behave identically on every checkout (including Windows).
+* text=auto eol=lf
+
+*.c            text eol=lf
+*.h            text eol=lf
+*.sh           text eol=lf
+*.conf         text eol=lf
+*.md           text eol=lf
+*.yml          text eol=lf
+*.yaml         text eol=lf
+Makefile       text eol=lf
+Dockerfile     text eol=lf
+.dockerignore  text eol=lf
+.gitignore     text eol=lf
+.gitattributes text eol=lf
+
+# Build products and archives are binary even when they look like text.
+*.png binary
+*.gz  binary
+*.tar binary
