@@ -35,8 +35,15 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential clang clang-tidy clang-format libclang-rt-18-dev valgrind shellcheck
+          sudo apt-get install -y build-essential clang clang-tidy clang-format libclang-rt-18-dev valgrind shellcheck gcc-aarch64-linux-gnu
           chmod +x scripts/*.sh
+      - name: Cross-build for aarch64
+        # Architecture-specific code (the ARMv8 CRC32 assembly in
+        # src/storage/crc32c.c) is never compiled by the amd64 jobs, so a
+        # hand-written instruction could rot unnoticed until the arm64 runner
+        # reaches it. Compile the tree against the cross toolchain here, which
+        # fails in seconds.
+        run: make -j"$(nproc)" CC=aarch64-linux-gnu-gcc BUILD=build/aarch64 all
       - name: Shell syntax
         run: |
           for script in scripts/*.sh examples/demo/*.sh; do bash -n "$script"; done

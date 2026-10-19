@@ -12,6 +12,10 @@
   now exercised end to end (not only the sanitizer integration targets).
 - The Docker CI walkthroughs detect a failed example run by the container's real exit code
   (`docker wait`) instead of `docker compose wait`, which reported a bogus status on one runner.
+- The aarch64 CRC32C backend assembles again: the 64-bit step used a mnemonic that does not exist
+  and the other two passed an X register where the instruction takes a W register, so the arm64
+  runner could not build the release archive. The quality job now cross-compiles the tree for
+  aarch64 on every push, because no amd64 job ever compiles that code.
 
 ### Added
 - `helixd --config FILE`: layered configuration files (`key = value`, `#` comments, quoted values,

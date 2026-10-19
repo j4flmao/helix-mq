@@ -4,7 +4,7 @@
  * Three implementations of the same checksum, picked once at start-up:
  *
  *   - SSE4.2 `crc32` (x86-64)     one 8-byte word per instruction
- *   - ARMv8 CRC32 (aarch64)       `crc32cd`, the same shape
+ *   - ARMv8 CRC32 (aarch64)       `crc32cx`, the same shape
  *   - portable slice-by-8         8 bytes per iteration, the fallback
  *
  * The hardware paths are compiled in conditionally and selected by a runtime
@@ -122,28 +122,32 @@ __attribute__((target("sse4.2"))) static uint32_t crc_x86(uint32_t crc, const ui
 
 #if defined(HX_CRC32C_ARM)
 /*
- * Inline assembly rather than <arm_acle.h>: the assembler knows the CRC
- * instructions whatever -march was given, so this stays valid for a build
- * whose baseline CPU has no CRC extension.
+ * Inline assembly rather than <arm_acle.h>: `.arch_extension crc` inside the
+ * asm enables the extension for that instruction only, so this assembles on a
+ * toolchain whose baseline -march is plain armv8-a. The HWCAP check in
+ * crc32c_select() is what keeps the instruction off CPUs that lack it.
+ *
+ * The operands name their register class explicitly: the 64-bit step reads an
+ * X register, the other two a W register.
  */
 static uint32_t crc_arm(uint32_t crc, const uint8_t *p, size_t n)
 {
     crc = ~crc;
     while (n >= 8) {
         uint64_t v = load64(p);
-        __asm__("crc32cd %w0, %w0, %1" : "+r"(crc) : "r"(v));
+        __asm__(".arch_extension crc\n\tcrc32cx %w0, %w0, %x1" : "+r"(crc) : "r"(v));
         p += 8;
         n -= 8;
     }
     while (n >= 4) {
         uint32_t v = load32(p);
-        __asm__("crc32cw %w0, %w0, %1" : "+r"(crc) : "r"(v));
+        __asm__(".arch_extension crc\n\tcrc32cw %w0, %w0, %w1" : "+r"(crc) : "r"(v));
         p += 4;
         n -= 4;
     }
     while (n-- > 0) {
         uint32_t v = *p++;
-        __asm__("crc32cb %w0, %w0, %1" : "+r"(crc) : "r"(v));
+        __asm__(".arch_extension crc\n\tcrc32cb %w0, %w0, %w1" : "+r"(crc) : "r"(v));
     }
     return ~crc;
 }
