@@ -52,8 +52,8 @@ overwrite existing release assets silently.
 Download the archive and its `.sha256` file from the same release, then run:
 
 ```sh
-sha256sum -c helix-mq-0.2.0-linux-amd64.tar.gz.sha256
-gh attestation verify helix-mq-0.2.0-linux-amd64.tar.gz --repo j4flmao/helix-mq
+sha256sum -c helix-mq-0.1.0-linux-amd64.tar.gz.sha256
+gh attestation verify helix-mq-0.1.0-linux-amd64.tar.gz --repo j4flmao/helix-mq
 ```
 
 Checksums detect corruption; attestations establish which GitHub workflow built the artifact.

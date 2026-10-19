@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 - 2026-10-19
 
 ### Fixed
 - Replicated writes reserve epoch storage separately from the configured payload limit. Valid
@@ -70,9 +70,3 @@
 - The wire-protocol regression suite is plain C (`tests/test_protocol.c`, `make protocol`); it
   spawns the real `helixd` and speaks the protocol over TCP. Python is no longer used anywhere in
   the project, so a build and its tests need nothing but a C toolchain.
-- Static Linux amd64/arm64 archive builds with checksums, extracted-package tests and draft release
-  automation with provenance attestations.
-- CI quality/runtime/portable jobs, weekly stress/fuzzing, CodeQL, Dependabot and PR labels.
-- Apache-2.0 license, contributor/security/conduct documentation and issue/PR templates.
-
-`VERSION` is currently 0.2.0. This file does not imply that a GitHub release has been published.

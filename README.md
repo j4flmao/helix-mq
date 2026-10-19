@@ -30,12 +30,12 @@ They do not require an installed libc or compiler. Windows/macOS users need Dock
 Use the [Releases page](https://github.com/j4flmao/helix-mq/releases) once a release is published;
 the existence of this workflow does not mean a release is already available.
 
-Example for amd64 version 0.2.0, after downloading its archive and checksum:
+Example for amd64 version 0.1.0, after downloading its archive and checksum:
 
 ```sh
-sha256sum -c helix-mq-0.2.0-linux-amd64.tar.gz.sha256
-tar -xzf helix-mq-0.2.0-linux-amd64.tar.gz
-cd helix-mq-0.2.0-linux-amd64
+sha256sum -c helix-mq-0.1.0-linux-amd64.tar.gz.sha256
+tar -xzf helix-mq-0.1.0-linux-amd64.tar.gz
+cd helix-mq-0.1.0-linux-amd64
 ./bin/helixd --version
 ./bin/helixd --data-dir ./data --sync always
 ```
