@@ -14,7 +14,8 @@
  * registered with the session it adopted, every dead broker is marked down, and each partition
  * with a live ISR member has a live leader.
  *
- * HX_CHOST_SEEDS=n sets the number of scenarios (default 40).
+ * HX_CHOST_SEEDS=n sets the number of scenarios (default 40); HX_CHOST_ONLY=n replays just
+ * scenario n, so a failure reported as "FAIL seed=1088" can be reproduced in seconds.
  */
 #define _XOPEN_SOURCE 700
 #include <ftw.h>
@@ -35,6 +36,7 @@
 #define NPARTS   6U
 #define HIST_MAX 4096U
 #define UNSET    0xFFFFFFFEU
+#define DOWN_MS  400U /* broker heartbeat timeout the controllers are configured with */
 
 typedef enum { F_RAFT, F_HELLO, F_REPLY, F_ALTER } fkind;
 
@@ -206,7 +208,7 @@ static bool cnode_start(sim *s, uint32_t i)
     cfg.raft.storage = hx_raft_wal_storage(n->wal);
     cfg.send_ctx = &n->sc;
     cfg.send = on_raft_send;
-    cfg.down_ms = 400;
+    cfg.down_ms = DOWN_MS;
     cfg.retry_ms = 120;
     cfg.snapshot_every = 40;
     const hx_raft_restore rs = hx_raft_wal_restore(n->wal);
@@ -670,6 +672,21 @@ static bool run_scenario(uint64_t seed, totals *tot)
     if (!s.bad && *why != '\0') {
         fail(&s, "LIVENESS: %s", why);
     }
+    /* A DOWN decided while the network was still lossy can sit in the log when the chaos ends: the
+     * broker it names had been silent for a whole heartbeat, so applying it afterwards is correct
+     * and that broker registers again with a new session. Let those decisions apply (and the
+     * cluster converge again) before the failover check captures the state it compares. On the now
+     * lossless network a proposal reaches every node in a few milliseconds, so a few heartbeats
+     * are ample. */
+    if (!s.bad) {
+        for (int64_t t = 0; t < 4 * (int64_t)DOWN_MS && !s.bad; t++) {
+            sim_ms(&s, false);
+        }
+        why = converged(&s);
+        if (*why != '\0') {
+            fail(&s, "LIVENESS before controller failover: %s", why);
+        }
+    }
     /* Stability across a controller failover: the new leader must give every broker a fresh grace
      * period instead of declaring healthy brokers down because it has not heard them yet. */
     if (!s.bad) {
@@ -736,9 +753,16 @@ int main(void)
     totals tot;
     memset(&tot, 0, sizeof tot);
     bool ok = true;
-    for (uint64_t seed = 1; seed <= seeds && ok; seed++) {
+    uint64_t ran = 0;
+    /* HX_CHOST_ONLY=seed replays a single scenario: a failure printed as "FAIL seed=1088" is then
+     * reproducible in seconds instead of after the 1087 scenarios before it. */
+    const char *only = getenv("HX_CHOST_ONLY");
+    const uint64_t from = only != NULL ? strtoull(only, NULL, 10) : 1U;
+    const uint64_t to = only != NULL ? from : seeds;
+    for (uint64_t seed = from; seed <= to && ok; seed++) {
         memset(g_hash, 0, g_hash_cap * sizeof *g_hash); /* indexes mean different things per run */
         ok = run_scenario(seed, &tot);
+        ran++;
     }
     free(g_hash);
     if (!ok) {
@@ -748,7 +772,7 @@ int main(void)
         "controller-on-raft simulation: %llu scenarios, %llu controller crashes/partitions, "
         "%llu broker kills, %llu commands applied, %llu leader changes, %llu ISR changes, "
         "%llu nodes ended with a snapshot, no invariant violated\n",
-        (unsigned long long)seeds, (unsigned long long)tot.faults, (unsigned long long)tot.kills,
+        (unsigned long long)ran, (unsigned long long)tot.faults, (unsigned long long)tot.kills,
         (unsigned long long)tot.applied, (unsigned long long)tot.epochs,
         (unsigned long long)tot.isr_versions, (unsigned long long)tot.snapped);
     return 0;

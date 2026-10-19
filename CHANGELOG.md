@@ -16,6 +16,11 @@
   and the other two passed an X register where the instruction takes a W register, so the arm64
   runner could not build the release archive. The quality job now cross-compiles the tree for
   aarch64 on every push, because no amd64 job ever compiles that code.
+- The controller-on-Raft simulation lets commands decided while the network was still lossy settle
+  before it judges failover stability. A broker that had been unreachable for a whole heartbeat is
+  marked down moments before the chaos ends and registers again with a new session once it comes
+  back, which the check mistook for a re-registration caused by the failover. `HX_CHOST_ONLY=n` now
+  replays the one scenario named in a failure so a reported seed is reproducible in seconds.
 
 ### Added
 - `helixd --config FILE`: layered configuration files (`key = value`, `#` comments, quoted values,
